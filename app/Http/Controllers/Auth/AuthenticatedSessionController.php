@@ -42,6 +42,7 @@ return redirect()->intended(route('dashboard', absolute: false));    ;
 
     /**
      * Destroy an authenticated session.
+     * 
      */
     public function destroy(Request $request): RedirectResponse
     {

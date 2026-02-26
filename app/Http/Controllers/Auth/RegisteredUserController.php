@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class RegisteredUserController extends Controller
 {
+    
     /**
      * Display the registration view.
      */
