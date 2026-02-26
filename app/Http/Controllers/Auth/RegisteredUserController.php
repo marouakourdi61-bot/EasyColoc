@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class RegisteredUserController extends Controller
 {
-    
+
     /**
      * Display the registration view.
      */
@@ -29,32 +29,25 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+    public function store(Request $request)
+{
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+    $isFirstUser = User::count() === 0;
 
-         $lastId = DB::getPdo()->lastInsertId();
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role' => $isFirstUser ? 'global_admin' : 'user',
+    ]);
 
-        if ($lastId == 1) {
-        $user->role = 'global_admin';
-        $user->save();
-        }
+    Auth::login($user);
 
-
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
-    }
+    return redirect()->route('dashboard');
+}
 }

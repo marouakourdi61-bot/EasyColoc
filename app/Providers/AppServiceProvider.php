@@ -20,5 +20,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+
+        $this->app['router']->aliasMiddleware('check.banned', \App\Http\Middleware\CheckBanned::class);
+
     }
 }

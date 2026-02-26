@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -34,12 +35,13 @@
     <!-- Main -->
     <main class="flex-1 flex flex-col">
         <!-- Header -->
-        @include('layouts.header')
-
+          @include('layouts.navigation')
         <!-- Page Content -->
-        <div class="p-8 max-w-7xl mx-auto">
-            {{ $slot }}
-        </div>
+        <div class="flex-1 bg-white p-8">
+    <div class="max-w-7xl mx-auto">
+        @yield('content')
+    </div>
+</div>
     </main>
 
 </body>

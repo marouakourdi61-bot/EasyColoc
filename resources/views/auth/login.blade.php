@@ -1,4 +1,12 @@
 <x-guest-layout>
+    <!-- Error message pour banned user -->
+    @if(session('error'))
+        <div class="bg-red-100 text-red-800 p-2 rounded mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
+
+
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
