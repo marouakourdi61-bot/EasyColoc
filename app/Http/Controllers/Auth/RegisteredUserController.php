@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
 class RegisteredUserController extends Controller
 {
@@ -40,6 +41,14 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+         $lastId = DB::getPdo()->lastInsertId();
+
+        if ($lastId == 1) {
+        $user->role = 'global_admin';
+        $user->save();
+        }
+
 
         event(new Registered($user));
 

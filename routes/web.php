@@ -17,4 +17,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+
+
+Route::middleware(['auth','banned'])->get('/dashboard', function () {
+    return view('dashboard');
+})->name('dashboard');
+
+
 require __DIR__.'/auth.php';
