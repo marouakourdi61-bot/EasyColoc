@@ -49,6 +49,13 @@ class User extends Authenticatable
     public function colocation()
 {
     return $this->belongsTo(Colocation::class);
+    
+
+}
+
+public function colocationInvitations()
+{
+    return $this->hasMany(ColocationInvitation::class);
 }
 
 }
