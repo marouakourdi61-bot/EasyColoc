@@ -27,6 +27,7 @@ class ColocationController extends Controller
     return view('colocation.index', compact('userColocation'));
 }
 
+
     public function store(Request $request)
     {
         $request->validate([

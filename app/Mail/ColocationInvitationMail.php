@@ -43,9 +43,11 @@ class InvitationNotification extends Notification implements ShouldQueue
             ->line("Vous avez été invité(e) à rejoindre la colocation : {$this->invitation->colocation->name}")
             ->action('Rejoindre la colocation', route('colocation.join', $this->invitation->token))
             ->line('Merci et à bientôt !');
+
     }
 
     /**
+     
      * Get the array representation of the notification (optional).
      */
     public function toArray(object $notifiable): array
