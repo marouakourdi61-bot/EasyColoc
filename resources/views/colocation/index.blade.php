@@ -70,25 +70,44 @@
                             <p class="text-slate-500">{{ $userColocation->description }}</p>
                         </div>
 
+                        @php
+                            $isActive = auth()->user()->active_colocation_id == $userColocation->id;
+                           @endphp
 
-                        <button onclick="openExpenseModal()"
-                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition shadow-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Ajouter une dépense
-                        </button>
-
-
-                        @can('invite', $userColocation)
-                            <button onclick="openInviteModal()"
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm">
-                                Inviter un membre
+                        @if($isActive)
+                            <button onclick="openExpenseModal()"
+                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Ajouter une dépense
                             </button>
-                        @endcan
+
+
+                            @can('invite', $userColocation)
+                                <button onclick="openInviteModal()"
+                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-sm">
+                                    Inviter un membre
+                                </button>
+                            @endcan
+
+
+
+                        @else
+                            <div class="text-slate-400 italic text-sm py-2">
+                                <span class="material-symbols-outlined text-xs"></span>
+                               
+                            </div>
+                        @endif
                     </div>
+
+
+
+
+
+                    
 
                     {{-- Statistiques dynamiques --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
@@ -160,12 +179,49 @@
                         </div>
                     </div>
 
-                    
-                    
+
+                    {{--LISTE DEPENSES --}}
+
+                    <div class="mt-8 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h2 class="text-xl font-bold text-slate-900 mb-4">Dernières Dépenses</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="border-b border-slate-100">
+                                        <th class="py-3 px-2 text-slate-500 font-semibold text-sm">Titre</th>
+                                        <th class="py-3 px-2 text-slate-500 font-semibold text-sm">Catégorie</th>
+                                        <th class="py-3 px-2 text-slate-500 font-semibold text-sm">Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($userColocation->expenses as $expense)
+                                        <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                                            <td class="py-3 px-2 font-medium text-slate-800">{{ $expense->title }}</td>
+                                            <td class="py-3 px-2">
+                                                <span
+                                                    class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-md text-xs font-bold uppercase">
+                                                    {{ $expense->category }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-2 font-bold text-slate-900">{{ number_format($expense->amount, 2) }}€
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="py-6 text-center text-slate-400 text-sm">Aucune dépense
+                                                enregistrée.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
 
 
                     {{-- MODAL INVITATION --}}
-                    
+
                     @can('invite', $userColocation)
                         <div id="invite-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
                             <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
@@ -179,8 +235,8 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Email du membre</label>
                                         <input type="email" name="email" required class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm p-3
-                                                                text-gray-900 bg-white
-                                                                focus:border-indigo-500 focus:ring-indigo-500"
+                                                                            text-gray-900 bg-white
+                                                                            focus:border-indigo-500 focus:ring-indigo-500"
                                             placeholder="ex: ami@exemple.com">
                                     </div>
                                     <div class="flex justify-end space-x-3 pt-2">
@@ -196,7 +252,7 @@
 
                 </div>
 
-                
+
 
                 <div id="expense-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
                     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative animate-fade-in">
@@ -224,6 +280,7 @@
                                     class="block w-full rounded-xl border-slate-200 shadow-sm text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 p-3 border"
                                     placeholder="Ex: Courses de la semaine">
                             </div>
+
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>

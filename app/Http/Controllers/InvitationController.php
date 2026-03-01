@@ -66,9 +66,7 @@ class InvitationController extends Controller
     $invitation = Invitation::where('token', $token)->firstOrFail();
 
 
-    if (auth()->user()->email !== $invitation->email) {
-        abort(403, 'Cette invitation ne vous appartient pas.');
-    }
+    
 
     return view('invitations.accept', compact('invitation'));
 }
@@ -79,6 +77,13 @@ public function accept($token)
     $invitation = Invitation::where('token', $token)->firstOrFail();
     $user = auth()->user();
 
+    if ($user->colocation_id !== null) {
+        return redirect()->route('dashboard')->with('error', 'Quittez votre colocation actuelle avant d\'en rejoindre une autre.');
+    }
+    
+    $user->update([
+        'colocation_id' => $invitation->colocation_id
+    ]);
     
     $invitation->colocation->members()->syncWithoutDetaching([$user->id => ['role' => 'membre']]);
 

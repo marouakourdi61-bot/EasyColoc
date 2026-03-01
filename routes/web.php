@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ColocationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\DashboardController;
 
 
 
@@ -17,11 +18,29 @@ Route::get('/', function () {
 
 
 
-// Dashboard
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', \App\Http\Middleware\CheckBanned::class])
-  ->name('dashboard');
+// Dashboard 
+
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', \App\Http\Middleware\CheckBanned::class])
+    ->name('dashboard');
+
+
+;
+    Route::get('/colocation/{id?}', [ColocationController::class, 'index'])
+    ->name('colocation.index');
+
+    
+
+
+
+Route::post('/colocations/store', [ColocationController::class, 'store'])->name('colocations.store');
+
+
+Route::post('/colocations/{id}/select', [ColocationController::class, 'select'])->name('colocations.switch');
+
+// Show 
+Route::get('/colocations/details/{id}', [ColocationController::class, 'show'])->name('colocation.show');
+
 
 // Profile routes
 Route::middleware('auth')->group(function () {
