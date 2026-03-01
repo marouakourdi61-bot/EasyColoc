@@ -6,7 +6,7 @@
             <span class="material-symbols-outlined">dashboard</span>
             Dashboard
         </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition" href="#">
+        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition" href="\">
             <span class="material-symbols-outlined">receipt_long</span>
             Expenses
         </a>

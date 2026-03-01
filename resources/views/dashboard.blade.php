@@ -174,7 +174,7 @@
             </div>
 
             
-            <form action="{{ route('colocations.store') }}" method="POST" class="p-6 space-y-4">
+            <form action="{{ route('colocation.store') }}" method="POST" class="p-6 space-y-4">
                 @csrf
                 <div>
                     <label class="block text-sm font-bold mb-2 opacity-70">Nom de l'espace</label>

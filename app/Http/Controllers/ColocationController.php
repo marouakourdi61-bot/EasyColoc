@@ -4,68 +4,46 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Colocation;
+use App\Models\Expense;
+use App\Models\Invitation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use App\Models\ColocationInvitation;
 
 
 class ColocationController extends Controller
-
 {
     public function index($id = null)
+{
+    $user = auth()->user();
+    $userColocation = null;
 
-    {
-        $user = auth()->user();
-        $userColocation = null;
-
-       
-        if ($id) {
-            $userColocation = Colocation::with(['members', 'owner', 'expenses.user'])->find($id);
-            if (!$userColocation || !$userColocation->members->contains($user->id)) {
-                return redirect()->route('dashboard')->with('error', 'Accès non autorisé.');
-            }
-        } else {
-            
-            $colocId = $user->active_colocation_id;
-            if ($colocId) {
-                $userColocation = Colocation::with(['members', 'owner', 'expenses.user'])->find($colocId);
-            }
-            if (!$userColocation) {
-                $userColocation = $user->colocations()->with(['members', 'owner', 'expenses.user'])->first();
-            }
+    if ($id) {
+        $userColocation = Colocation::with(['members', 'owner', 'expenses'])->find($id);
+        
+        if (!$userColocation || !$userColocation->members->contains($user->id)) {
+            return redirect()->route('dashboard')->with('error', 'Accès non autorisé.');
         }
-
+    } 
+    else {
+        if ($user->active_colocation_id) {
+            $userColocation = Colocation::with(['members', 'owner', 'expenses'])->find($user->active_colocation_id);
+        }
         
         if (!$userColocation) {
-            return view('colocation.index', [
-                'userColocation' => null, 
-                'role' => null,
-                'total' => 0,
-                'share' => 0,
-                'balance' => collect([])
-            ]);
+            $userColocation = $user->colocations()->with(['members', 'owner', 'expenses'])->first();
         }
-
-        //  CALCUL
-        $total = $userColocation->expenses->sum('amount'); 
-        $memberCount = max($userColocation->members->count(), 1); 
-        $share = $total / $memberCount; 
-
-        $balance = $userColocation->members->map(function($member) use ($userColocation, $share) {
-            $paid = $userColocation->expenses->where('user_id', $member->id)->sum('amount');
-            return [
-                'user' => $member,
-                'paid' => $paid,
-                'balance' => $paid - $share, 
-            ];
-        });
-
-        $memberInfo = $userColocation->members->find($user->id);
-        $role = $memberInfo ? $memberInfo->pivot->role : 'membre';
-
-        return view('colocation.index', compact('userColocation', 'role', 'total', 'share', 'balance'));
     }
+
+    if (!$userColocation) {
+        return view('colocation.index', ['userColocation' => null, 'role' => null]);
+    }
+
+    $memberInfo = $userColocation->members->find($user->id);
+    $role = $memberInfo ? $memberInfo->pivot->role : 'membre';
+
+    return view('colocation.index', compact('userColocation', 'role'));
+}
 
 
     public function store(Request $request)
@@ -91,39 +69,63 @@ class ColocationController extends Controller
     //show
     public function show($id)
 {
-    $colocation = Colocation::with(['members'])->findOrFail($id);
     
-    $userInColoc = $colocation->members->find(auth()->id());
+    $userColocation = Colocation::with(['members', 'expenses', 'owner'])->findOrFail($id);
     
+    $user = auth()->user();
+    $userInColoc = $userColocation->members->find($user->id);
+
     if (!$userInColoc) {
-        return redirect()->route('dashboard')->with('error', 'Vous n\'êtes pas membre.');
+        return redirect()->route('dashboard')->with('error', 'Accès non autorisé.');
     }
 
-    $role = $userInColoc->pivot->role; 
+    $role = $userInColoc->pivot->role;
 
-    $userColocation = $colocation;
+    //  Calcul
+    $total = $userColocation->expenses->sum('amount'); 
+    
+    //  membres
+    $memberCount = $userColocation->members->count();
+    
+   
+    $share = $memberCount > 0 ? ($total / $memberCount) : 0; 
 
-    return view('colocation.index', compact('userColocation', 'role'));
+    // 
+
+    // Calcul Balances
+    $balances = $userColocation->members->map(function($member) use ($userColocation, $share) {
+        
+        $paid = $userColocation->expenses->where('user_id', $member->id)->sum('amount');
+        
+        return [
+            'id'      => $member->id,
+            'name'    => $member->name,
+            'paid'    => $paid,
+            'balance' => $paid - $share, 
+            'role'    => $member->pivot->role ?? 'Membre'
+        ];
+    });
+
+    return view('colocations.show', compact('userColocation', 'role', 'total', 'share', 'balances'));
 }
     
 
    public function invite(Request $request, Colocation $colocation)
 {
-dd(1);
     $request->validate([
         'email' => 'required|email',
     ]);
 
     $token = Str::random(32);
 
-    $invitation = ColocationInvitation::create([
+    $invitation = Invitation::create([
         'colocation_id' => $colocation->id,
         'email' => $request->email,
         'token' => $token,
     ]);
 
     Mail::to($request->email)
-        ->send(new \App\Mail\ColocationInvitationMail($invitation));
+        ->send(new \App\Mail\InvitationMail($invitation));
 
     return back()->with('success', 'Invitation envoyée avec succès !');
 }
