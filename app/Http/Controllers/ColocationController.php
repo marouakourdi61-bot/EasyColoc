@@ -13,6 +13,7 @@ use App\Models\ColocationInvitation;
 class ColocationController extends Controller
 {
     public function index($id = null)
+    
     {
         $user = auth()->user();
         $userColocation = null;

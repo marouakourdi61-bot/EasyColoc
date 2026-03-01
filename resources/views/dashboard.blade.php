@@ -173,6 +173,7 @@
                 <h3 class="text-xl font-bold">Nouvelle Colocation</h3>
             </div>
 
+            
             <form action="{{ route('colocations.store') }}" method="POST" class="p-6 space-y-4">
                 @csrf
                 <div>

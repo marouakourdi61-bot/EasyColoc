@@ -25,13 +25,14 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 
-;
-    Route::get('/colocation/{id?}', [ColocationController::class, 'index'])
+Route::get('/colocation/{id?}', [ColocationController::class, 'index'])
+    ->middleware(['auth'])
     ->name('colocation.index');
+    
 
     
 
-
+//
 
 Route::post('/colocations/store', [ColocationController::class, 'store'])->name('colocations.store');
 

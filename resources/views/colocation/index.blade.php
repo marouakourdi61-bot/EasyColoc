@@ -112,6 +112,7 @@
                     {{-- Statistiques dynamiques --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                         {{-- Membres --}}
+                        
                         <div
                             class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-center hover:shadow-md transition">
                             <p class="text-sm font-semibold text-slate-400 uppercase tracking-wide">Membres</p>
