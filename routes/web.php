@@ -45,6 +45,11 @@ Route::post('/colocations/{id}/select', [ColocationController::class, 'select'])
 // Show 
 Route::get('/colocation/{colocation}', [ColocationController::class, 'show'])->name('colocation.show');
 
+//settlements
+
+Route::post('/settlements/{settlement}/confirm',
+    [App\Http\Controllers\ColocationController::class, 'confirmSettlement']
+);
 
 // Profile routes
 Route::middleware('auth')->group(function () {
