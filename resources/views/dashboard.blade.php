@@ -137,7 +137,7 @@
                                         membres</span>
                                 </div>
 
-                                <a href="{{ route('colocation.index', ['id' => $colocation->id]) }}"
+                                <a href="{{ route('colocation.show', ['id' => $colocation->id]) }}"
                                     class="group/btn {{ $isActive ? 'text-accent' : 'text-slate-500' }} font-black text-sm flex items-center hover:text-accent transition-all">
                                     {{ $isActive ? 'Gérer' : 'Consulter' }}
                                     <span

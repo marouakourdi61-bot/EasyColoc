@@ -61,6 +61,9 @@ class ColocationController extends Controller
 
     
     $colocation->members()->attach(Auth::id(), ['role' => 'admin']);
+    
+    // Définir cette colocation comme active
+    Auth::user()->update(['active_colocation_id' => $colocation->id]);
 
     return redirect()->route('colocation.index')->with('success', 'Colocation créée avec succès!');
 }
@@ -69,44 +72,31 @@ class ColocationController extends Controller
     //show
     public function show($id)
 {
-    
-    $userColocation = Colocation::with(['members', 'expenses', 'owner'])->findOrFail($id);
-    
-    $user = auth()->user();
-    $userInColoc = $userColocation->members->find($user->id);
 
-    if (!$userInColoc) {
-        return redirect()->route('dashboard')->with('error', 'Accès non autorisé.');
-    }
+        $userColocation = Colocation::with(['members', 'expenses', 'owner'])->findOrFail($id);
+        $user = auth()->user();
+        $userInColoc = $userColocation->members->find($user->id);
 
-    $role = $userInColoc->pivot->role;
+        if (!$userInColoc) {
+            return redirect()->route('dashboard')->with('error', 'Accès non autorisé.');
+        }
 
-    //  Calcul
-    $total = $userColocation->expenses->sum('amount'); 
-    
-    //  membres
-    $memberCount = $userColocation->members->count();
-    
-   
-    $share = $memberCount > 0 ? ($total / $memberCount) : 0; 
+        $role = $userInColoc->pivot->role;
+        $total = $userColocation->expenses->sum('amount'); 
+        $memberCount = $userColocation->members->count();
+        $share = $memberCount > 0 ? ($total / $memberCount) : 0; 
+        $balances = $userColocation->members->map(function($member) use ($userColocation, $share) {
+            $paid = $userColocation->expenses->where('user_id', $member->id)->sum('amount');
+            return [
+                'id'      => $member->id,
+                'name'    => $member->name,
+                'paid'    => $paid,
+                'balance' => $paid - $share, 
+                'role'    => $member->pivot->role ?? 'Membre'
+            ];
+        });
 
-    // 
-
-    // Calcul Balances
-    $balances = $userColocation->members->map(function($member) use ($userColocation, $share) {
-        
-        $paid = $userColocation->expenses->where('user_id', $member->id)->sum('amount');
-        
-        return [
-            'id'      => $member->id,
-            'name'    => $member->name,
-            'paid'    => $paid,
-            'balance' => $paid - $share, 
-            'role'    => $member->pivot->role ?? 'Membre'
-        ];
-    });
-
-    return view('colocations.show', compact('userColocation', 'role', 'total', 'share', 'balances'));
+        return view('colocation.index', compact('userColocation', 'role', 'total', 'share', 'balances'))->with('readonly', true);
 }
     
 
@@ -147,5 +137,6 @@ class ColocationController extends Controller
 
     return redirect()->route('colocation.index', ['id' => $colocation->id])
                      ->with('success', 'Bienvenue dans ' . $colocation->name);
+                     
 }
 }

@@ -59,4 +59,11 @@ public function colocationInvitations()
     return $this->hasMany(ColocationInvitation::class);
 }
 
+public function colocations()
+{
+    return $this->belongsToMany(\App\Models\Colocation::class, 'colocation_user', 'user_id', 'colocation_id')
+        ->withPivot('role') 
+        ->withTimestamps();
+}
+
 }

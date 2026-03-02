@@ -12,13 +12,14 @@ class DashboardController extends Controller
     {
         $userId = Auth::id();
 
-      
-        $colocations = Colocation::where('user_id', $userId)
-            ->orWhereHas('members', function($query) use ($userId) {
-                $query->where('users.id', $userId);
-            })
-            ->withCount('members') 
-            ->get();
+        $colocations = Colocation::whereHas('members', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })
+        ->distinct()
+        ->select('colocations.*')
+        ->withCount('members')
+        ->orderByDesc('colocations.created_at')
+        ->get();
 
         return view('dashboard', compact('colocations'));
     }
