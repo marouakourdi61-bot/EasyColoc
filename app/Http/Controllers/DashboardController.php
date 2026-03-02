@@ -10,16 +10,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $userId = Auth::id();
-
-        $colocations = Colocation::whereHas('members', function($query) use ($userId) {
-            $query->where('users.id', $userId);
-        })
-        ->distinct()
-        ->select('colocations.*')
-        ->withCount('members')
-        ->orderByDesc('colocations.created_at')
+     $colocations = Auth::user()
+        ->colocations()
+        ->with(['users' => fn($q) => $q->withPivot('role', 'left_at')])
         ->get();
+        //  dd($colocations);
 
         return view('dashboard', compact('colocations'));
     }

@@ -25,9 +25,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 
-Route::get('/colocation/{id?}', [ColocationController::class, 'index'])
+Route::get('/colocation', [ColocationController::class, 'index'])
     ->middleware(['auth'])
-    ->name('colocation.index');
+    ->name('colocations.index');
     
 
     Route::post('/colocation/{colocation}/expenses', [ColocationController::class, 'storeExpense'])
@@ -36,11 +36,6 @@ Route::get('/colocation/{id?}', [ColocationController::class, 'index'])
 
     Route::get('/colocations/{id}', [ColocationController::class, 'show'])->name('colocations.show');
 
-    Route::get('/colocation/{id}/expenses', [ColocationController::class, 'viewExpenses'])->name('coloc.expenses');
-
-Route::post('/colocations/{colocation}/expenses', [ColocationController::class, 'storeExpense'])
-    ->name('colocations.expenses.store');
-
 
 Route::post('/colocations/store', [ColocationController::class, 'store'])->name('colocations.store');
 
@@ -48,7 +43,7 @@ Route::post('/colocations/store', [ColocationController::class, 'store'])->name(
 Route::post('/colocations/{id}/select', [ColocationController::class, 'select'])->name('colocations.switch');
 
 // Show 
-Route::get('/colocations/details/{id}', [ColocationController::class, 'show'])->name('colocation.show');
+Route::get('/colocation/{colocation}', [ColocationController::class, 'show'])->name('colocation.show');
 
 
 // Profile routes
@@ -56,27 +51,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::post('/expenses/{colocation}', [ExpenseController::class, 'store'])->name('expenses.store');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(function () {
     Route::get('/colocation', [ColocationController::class, 'index'])->name('colocation.index');
     Route::post('/colocation', [ColocationController::class, 'store'])->name('colocation.store');
 });
-
+Route::patch('/colocations/{colocation}/leave', [ColocationController::class, 'leave'])
+    ->name('colocations.leave');
 
 Route::post('/colocation/invite/{colocation}', [InvitationController::class, 'send'])->name('colocation.invite');
-Route::get('/colocation/join/{token}', [InvitationController::class, 'join'])->name('colocation.join');
+// Route::get('/colocation/join/{token}', [InvitationController::class, 'join'])->name('colocation.join');
 Route::get('/colocation/register/{token}', [ColocationController::class, 'showRegistrationForm'])->name('colocation.register');
 Route::post('/colocation/register/{token}', [ColocationController::class, 'registerUser'])->name('colocation.register.submit');
 
 Route::get('/colocation/accept/{token}', [ColocationController::class, 'accept'])
     ->name('colocation.accept');
-
-Route::get('/colocation/join/{token}', [InvitationController::class, 'join'])
-    ->name('colocation.join')
-    ->middleware('auth');
-
 
 
     Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(function () {
@@ -96,8 +87,8 @@ Route::get('/colocation/join/{token}', [InvitationController::class, 'join'])
 });
 
 
-    Route::get('/colocation/{id}', [ColocationController::class, 'show'])
-    ->name('index.blade.php');
+    // Route::get('/colocation/{id}', [ColocationController::class, 'show'])
+    // ->name('index.blade.php');
 
 
 require __DIR__.'/auth.php';

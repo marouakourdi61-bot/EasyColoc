@@ -15,19 +15,31 @@ use App\Models\ColocationInvitation;
 
 class InvitationController extends Controller
 {
-    public function send(Request $request , Colocation $colocation)
+    public function send(Request $request, Colocation $colocation)
     {
-//   dd($colocation);
-        $request->validate([
-            'email' => 'required|email'
-        ]);
-        // $colocation = auth()->user()->colocation;
-        
-      
         if (!$colocation) {
-            return back()->with('error', 'Vous n’avez pas de colocation.');
+            return back()->with('error', 'Vous n\'avez pas de colocation.');
         }
 
+       
+        $alreadyMember = $colocation->users()
+            ->wherePivotNull('left_at')
+            ->where('email', $request->email)
+            ->exists();
+
+        if ($alreadyMember) {
+            return back()->with('error', 'Cet utilisateur est déjà membre actif de cette colocation.');
+        }
+
+        
+        $alreadyInvited = Invitation::where('colocation_id', $colocation->id)
+            ->where('email', $request->email)
+            ->where('used', 0)
+            ->exists();
+
+        if ($alreadyInvited) {
+            return back()->with('error', 'Une invitation a déjà été envoyée à cette adresse email.');
+        }
         // Create invitation
         $token = Str::random(32);
         $invitation = Invitation::create([
@@ -39,68 +51,54 @@ class InvitationController extends Controller
         $link = route('colocation.join', $invitation->token);
 
 
-        // dd($invitation);
-       
 
         $invitation->load('colocation');
 
-        // dd($invitation->email);
 
+        Mail::to($invitation->email)->send(new Invit($invitation));
 
-         Mail::to($invitation->email)->send(new Invit($invitation));
-    // return 'Email sent!';
+        $url = url('/invitations/join/' . $invitation->token);
 
-        // try {
-        //     // Send email using Notification
-        //     Notification::route('mail', $request->email)
-        //                 ->notify(new InvitationNotif($invitation));
-        // } catch (\Exception $e) {
-        //     return back()->with('error', 'Erreur lors de l’envoi du mail: ' . $e->getMessage());
-        // }
-
-        return back()->with('success', 'Invitation envoyée avec succès!');
+        return back()->with('success', $url);
     }
 
     public function join($token)
-{
-    $invitation = Invitation::where('token', $token)->firstOrFail();
+    {
+        $invitation = Invitation::where('token', $token)->firstOrFail();
 
 
-    
-
-    return view('invitations.accept', compact('invitation'));
-}
 
 
-public function accept($token)
-{
-    $invitation = Invitation::where('token', $token)->firstOrFail();
-    $user = auth()->user();
-
-    if ($user->colocation_id !== null) {
-        return redirect()->route('dashboard')->with('error', 'Quittez votre colocation actuelle avant d\'en rejoindre une autre.');
+        return view('invitations.accept', compact('invitation'));
     }
-    
-    $user->update([
-        'colocation_id' => $invitation->colocation_id
-    ]);
-    
-    $invitation->colocation->members()->syncWithoutDetaching([$user->id => ['role' => 'membre']]);
-
-    $invitation->delete();
 
 
-    return redirect()->route('colocation.index')->with('success', 'Bienvenue dans la colocation !');
-}
+    public function accept($token)
+    {
+        $invitation = Invitation::where('token', $token)->firstOrfail();
 
-public function refuse($token)
-{
-    $invitation = Invitation::where('token', $token)->firstOrFail();
+        if (auth()->user()->email != $invitation->email)
+            abort(403);
+        $invitation->update([
+            "used" => 1,
 
-    $invitation->delete();
+        ]);
 
-    return redirect()->route('dashboard')
-        ->with('info', 'Invitation refusée.');
-}
+        $colocation = Colocation::findOrfail($invitation->colocation_id);
+        $colocation->users()->attach(auth()->id(), ['role' => 'member', 'left_at' => null]);
 
+
+
+        return redirect()->route('colocation.show', $colocation)->with('success', 'Bienvenue dans la colocation !');
+    }
+
+    public function refuse($token)
+    {
+        $invitation = Invitation::where('token', $token)->firstOrFail();
+
+        $invitation->delete();
+
+        return redirect()->route('dashboard')
+            ->with('info', 'Invitation refusée.');
+    }
 }

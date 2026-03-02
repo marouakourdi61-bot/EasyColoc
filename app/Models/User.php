@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -20,7 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'active_colocation_id',
+        'role',
+        'is_banned',
+        'reputation'
     ];
 
     /**
@@ -47,23 +50,18 @@ class User extends Authenticatable
     }
 
 
-    public function colocation()
-{
-    return $this->belongsTo(Colocation::class);
-    
 
-}
+
+ public function colocations() : BelongsToMany {
+        return $this->belongsToMany(Colocation::class)
+        ->withPivot('role','left_at')
+        ->withTimestamps()
+        ;
+    }
 
 public function colocationInvitations()
 {
     return $this->hasMany(ColocationInvitation::class);
-}
-
-public function colocations()
-{
-    return $this->belongsToMany(\App\Models\Colocation::class, 'colocation_user', 'user_id', 'colocation_id')
-        ->withPivot('role') 
-        ->withTimestamps();
 }
 
 }

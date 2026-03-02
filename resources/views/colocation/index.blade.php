@@ -15,12 +15,10 @@
                     <h2 class="text-2xl font-bold text-slate-800 mb-2">Vous n'avez pas encore de colocation.</h2>
                     <p class="text-slate-500 mb-8">Créez votre espace pour commencer à gérer vos dépenses communes en toute simplicité.</p>
 
-                    @if(empty($readonly))
                     <button id="btn-show-form" onclick="toggleColocForm(true)"
                         class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-all transform hover:scale-105">
                         + Ajouter une colocation
                     </button>
-                    @endif
 
                     {{-- FORMULAIRE --}}
                     <div id="coloc-form-container" class="hidden mt-10 p-6 bg-slate-50 rounded-xl border border-slate-200 text-left animate-fade-in">
@@ -55,7 +53,8 @@
 
                         <div class="flex gap-2">
                             @php $isActive = auth()->user()->active_colocation_id == $userColocation->id; @endphp
-                            @if($isActive && empty($readonly))
+                            
+                            @if($isActive)
                                 <button onclick="openModal('expense-modal')" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition shadow-sm">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

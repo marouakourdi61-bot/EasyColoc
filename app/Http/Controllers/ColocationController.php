@@ -46,60 +46,73 @@ class ColocationController extends Controller
 }
 
 
-    public function store(Request $request)
+public function store(Request $request)
 {
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'description' => 'required|string',
+    
+    // Check active usr
+    $hasActiveColocation = Auth::user()
+        ->colocations()
+        ->wherePivotNull('left_at')
+        ->exists();
+
+    if ($hasActiveColocation) {
+        return redirect()->route('dashboard')
+            ->with('error', 'Vous êtes déjà membre d\'une colocation active.');
+    }
+
+    $data = $request->validate([
+        'name'        => 'required|string|max:30',
+        'description' => 'nullable|string|max:100',
     ]);
 
     $colocation = Colocation::create([
-        'name' => $request->name,
-        'description' => $request->description,
-        'user_id' => Auth::id(),
+        'name'        => $data['name'],
+        'description' => $data['description'],
+        'user_id'  => auth()->id(),
     ]);
 
-    
-    $colocation->members()->attach(Auth::id(), ['role' => 'admin']);
-    
-    // Définir cette colocation comme active
-    Auth::user()->update(['active_colocation_id' => $colocation->id]);
+    $colocation->users()->attach(auth()->id(), ['role' => 'owner', 'left_at' => null]);
 
-    return redirect()->route('colocation.index')->with('success', 'Colocation créée avec succès!');
+    return redirect()->route('colocations.show', $colocation)
+        ->with('success', 'Colocation créée avec succès !');
 }
 
 
-    //show
-    public function show($id)
+ public function show(Colocation $colocation)
 {
+    $colocation->load(['expenses.user']);
+   
+    $user = auth()->user();
 
-        $userColocation = Colocation::with(['members', 'expenses', 'owner'])->findOrFail($id);
-        $user = auth()->user();
-        $userInColoc = $userColocation->members->find($user->id);
-
-        if (!$userInColoc) {
-            return redirect()->route('dashboard')->with('error', 'Accès non autorisé.');
-        }
-
-        $role = $userInColoc->pivot->role;
-        $total = $userColocation->expenses->sum('amount'); 
-        $memberCount = $userColocation->members->count();
-        $share = $memberCount > 0 ? ($total / $memberCount) : 0; 
-        $balances = $userColocation->members->map(function($member) use ($userColocation, $share) {
-            $paid = $userColocation->expenses->where('user_id', $member->id)->sum('amount');
-            return [
-                'id'      => $member->id,
-                'name'    => $member->name,
-                'paid'    => $paid,
-                'balance' => $paid - $share, 
-                'role'    => $member->pivot->role ?? 'Membre'
-            ];
-        });
-
-        return view('colocation.index', compact('userColocation', 'role', 'total', 'share', 'balances'))->with('readonly', true);
-}
     
+    $currentUser = $colocation->users->firstWhere('id', $user->id);
+   
+    if (!$currentUser) {
+        return redirect()->route('dashboard')->with('error', 'Accès non autorisé.');
+    }
 
+    $role    = $currentUser->pivot->role;
+    // read-only 
+    $hasLeft = !is_null($currentUser->pivot->left_at); 
+
+    // active members 
+    $activeMembers = $colocation->users->filter(fn($m) => is_null($m->pivot->left_at));
+    $memberCount   = $activeMembers->count();
+    $total = $colocation->expenses->sum('amount');
+    $share = $memberCount > 0 ? ($total / $memberCount) : 0;
+
+   
+
+       $balances = $colocation->users->map(fn($user) => [
+            'user'    => $user,
+            'paid'    => $paid = $colocation->expenses->where('user_id', $user->id)->sum('amount'),
+            'share'   => $share,
+            'balance' => $paid - $share,
+        ]);
+
+
+    return view('colocation.show', compact('colocation', 'role', 'hasLeft', 'total', 'share', 'balances', 'activeMembers'));
+}
    public function invite(Request $request, Colocation $colocation)
 {
     $request->validate([
@@ -137,6 +150,40 @@ class ColocationController extends Controller
 
     return redirect()->route('colocation.index', ['id' => $colocation->id])
                      ->with('success', 'Bienvenue dans ' . $colocation->name);
-                     
+}
+
+public function leave(Colocation $colocation)
+{
+    $user = auth()->user();
+
+    $currentUser = $colocation->users()
+        ->withPivot('role', 'left_at')
+        ->where('user_id', $user->id)
+        ->first();
+
+    // must be a member
+    if (!$currentUser) {
+        return redirect()->route('dashboard')->with('error', 'Vous n\'êtes pas membre de cette colocation.');
+    }
+
+    // admins cannot leave
+    if ($currentUser->pivot->role === 'admin' || $currentUser->pivot->role === 'owner') {
+        return redirect()->route('colocations.show', $colocation)
+            ->with('error', 'En tant qu\'admin, vous ne pouvez pas quitter la colocation.');
+    }
+
+
+    if (!is_null($currentUser->pivot->left_at)) {
+        return redirect()->route('colocations.show', $colocation)
+            ->with('error', 'Vous avez déjà quitté cette colocation.');
+    }
+
+    
+    $colocation->users()->updateExistingPivot($user->id, [
+        'left_at' => now(),
+    ]);
+
+    return redirect()->route('dashboard')
+        ->with('success', 'Vous avez quitté la colocation "' . $colocation->name . '".');
 }
 }

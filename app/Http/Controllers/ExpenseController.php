@@ -11,22 +11,23 @@ class ExpenseController extends Controller
 {
     //
 
-    public function store(Request $request)
+    public function store(Request $request , Colocation $colocation)
     {
-        $request->validate([
+        // dd($request);
+       $data =  $request->validate([
             'title' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
             'category' => 'required|string',
-            'colocation_id' => 'required|exists:colocations,id',
+           
         ]);
 
-        
+       
         $expense = Expense::create([
             'title' => $request->title,
             'amount' => $request->amount,
             'category' => $request->category,
             'user_id' => Auth::id(), 
-            'colocation_id' => $request->colocation_id,
+            'colocation_id' => $colocation->id,
         ]);
 
         

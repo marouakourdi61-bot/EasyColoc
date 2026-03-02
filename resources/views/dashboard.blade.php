@@ -86,7 +86,25 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse($colocations as $colocation)
                         @php
-                            $isActive = auth()->user()->active_colocation_id == $colocation->id;
+                            
+                            $currentUserPivot = $colocation->users
+                                ->firstWhere('id', auth()->id())
+                                ?->pivot;
+
+                            
+                            $isActive = is_null($currentUserPivot?->left_at);
+
+                            $isAdmin = $currentUserPivot?->role === 'admin';
+
+                           
+                            $memberCount = isset($colocation->users)
+                                ? $colocation->users->filter(fn($u) => is_null($u->pivot->left_at))->count()
+                                : ($colocation->members_count ?? 0);
+
+                            
+                            $activeMembers = isset($colocation->users)
+                                ? $colocation->users->filter(fn($u) => is_null($u->pivot->left_at))
+                                : collect();
                         @endphp
 
                         <div
@@ -99,8 +117,7 @@
                             <div class="flex justify-between items-start mb-6">
                                 <div
                                     class="w-12 h-12 {{ $isActive ? 'bg-accent text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-400' }} rounded-xl flex items-center justify-center transition-colors">
-                                    <span
-                                        class="material-symbols-outlined">{{ $isActive ? 'home_work' : 'door_front' }}</span>
+                                    <span class="material-symbols-outlined">{{ $isActive ? 'home_work' : 'door_front' }}</span>
                                 </div>
 
                                 <div class="flex flex-col items-end gap-2">
@@ -117,8 +134,8 @@
                                     @endif
 
                                     <span
-                                        class="text-[9px] uppercase font-black px-2 py-0.5 rounded-md border {{ $colocation->user_id == auth()->id() ? 'border-accent text-accent' : 'border-slate-300 text-slate-400' }}">
-                                        {{ $colocation->user_id == auth()->id() ? 'Admin' : 'Membre' }}
+                                        class="text-[9px] uppercase font-black px-2 py-0.5 rounded-md border {{ $isAdmin ? 'border-accent text-accent' : 'border-slate-300 text-slate-400' }}">
+                                        {{ $currentUserPivot?->role ?? 'Membre' }}
                                     </span>
                                 </div>
                             </div>
@@ -126,25 +143,53 @@
                             <h3 class="text-xl font-bold mb-2 {{ $isActive ? 'text-accent' : '' }} transition-colors">
                                 {{ $colocation->name }}
                             </h3>
-                            <p class="text-sm opacity-60 mb-6 line-clamp-2 h-10">{{ $colocation->description }}</p>
+                            <p class="text-sm opacity-60 mb-4 line-clamp-2 h-10">{{ $colocation->description }}</p>
+
+                            {{-- Member avatars (active members only) --}}
+                            @if($activeMembers->count() > 0)
+                                <div class="flex items-center gap-1 mb-4">
+                                    @foreach($activeMembers->take(5) as $member)
+                                        @php $memberRole = $member->pivot->role; @endphp
+                                        <div
+                                            class="w-7 h-7 rounded-full {{ $memberRole === 'admin' ? 'bg-accent/30 border-accent/40' : 'bg-slate-200 dark:bg-white/10 border-white dark:border-backgroundDark' }} border-2 flex items-center justify-center text-[10px] font-black {{ $memberRole === 'admin' ? 'text-accent' : 'text-slate-500 dark:text-slate-300' }} -ml-1 first:ml-0"
+                                            title="{{ $member->name }} ({{ ucfirst($memberRole) }})">
+                                            {{ strtoupper(substr($member->name, 0, 1)) }}
+                                        </div>
+                                    @endforeach
+                                    @if($activeMembers->count() > 5)
+                                        <div class="w-7 h-7 rounded-full bg-slate-200 dark:bg-white/10 border-2 border-white dark:border-backgroundDark flex items-center justify-center text-[10px] font-black opacity-60 -ml-1">
+                                            +{{ $activeMembers->count() - 5 }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
 
                             <div
                                 class="flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
                                 <div class="flex items-center gap-1 opacity-70">
                                     <span class="material-symbols-outlined text-sm">group</span>
-                                    <span
-                                        class="text-sm font-bold">{{ $colocation->members_count ?? $colocation->members->count() }}
-                                        membres</span>
+                                    <span class="text-sm font-bold">{{ $memberCount }} membre{{ $memberCount > 1 ? 's' : '' }}</span>
                                 </div>
 
-                                <a href="{{ route('colocation.show', ['id' => $colocation->id]) }}"
-                                    class="group/btn {{ $isActive ? 'text-accent' : 'text-slate-500' }} font-black text-sm flex items-center hover:text-accent transition-all">
-                                    {{ $isActive ? 'Gérer' : 'Consulter' }}
-                                    <span
-                                        class="material-symbols-outlined text-sm ml-1 group-hover/btn:translate-x-1 transition-transform">
-                                        {{ $isActive ? 'arrow_forward' : 'visibility' }}
-                                    </span>
-                                </a>
+                                <div class="flex items-center gap-3">
+                                    {{-- Admin-only: manage members --}}
+                                    @if($isAdmin)
+                                        <a href="#"
+                                            class="text-slate-400 hover:text-accent transition"
+                                            title="Gérer les membres">
+                                            <span class="material-symbols-outlined text-sm">manage_accounts</span>
+                                        </a>
+                                    @endif
+
+                                    <a href="{{ route('colocation.show', $colocation) }}"
+                                        class="group/btn {{ $isActive ? 'text-accent' : 'text-slate-500' }} font-black text-sm flex items-center hover:text-accent transition-all">
+                                        {{ $isActive ? 'Gérer' : 'Consulter' }}
+                                        <span
+                                            class="material-symbols-outlined text-sm ml-1 group-hover/btn:translate-x-1 transition-transform">
+                                            {{ $isActive ? 'arrow_forward' : 'visibility' }}
+                                        </span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -163,6 +208,7 @@
         </main>
     </div>
 
+    {{-- Create Modal --}}
     <div x-show="openCreateModal" x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak>
@@ -173,7 +219,6 @@
                 <h3 class="text-xl font-bold">Nouvelle Colocation</h3>
             </div>
 
-            
             <form action="{{ route('colocation.store') }}" method="POST" class="p-6 space-y-4">
                 @csrf
                 <div>

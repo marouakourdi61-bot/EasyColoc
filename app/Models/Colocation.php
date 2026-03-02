@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Colocation extends Model
 {
@@ -12,26 +13,13 @@ class Colocation extends Model
     protected $fillable = ['name', 'description', 'user_id'];
 
     
-    public function members()
-{
-    
-    return $this->belongsToMany(User::class, 'colocation_user')
-                ->withPivot('role')
-                ->withTimestamps();
-}
 
-public function owner()
-{
-    return $this->belongsTo(User::class, 'user_id');
-    
-}
-
-
-
-    public function users()
-    {
-        return $this->members();
-    }
+ public function users() :BelongsToMany{
+       return $this->belongsToMany(User::class)
+        ->withPivot('role','left_at')
+        ->withTimestamps()
+        ; 
+   }
 
     public function expenses() {
     return $this->hasMany(Expense::class);

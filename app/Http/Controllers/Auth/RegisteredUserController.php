@@ -43,7 +43,7 @@ class RegisteredUserController extends Controller
         'name' => $request->name,
         'email' => $request->email,
         'password' => Hash::make($request->password),
-        'role' => $isFirstUser ? 'global_admin' : 'user',
+        'role' => $isFirstUser ? 'admin' : 'user',
     ]);
 
     Auth::login($user);
