@@ -108,6 +108,19 @@ class ColocationController extends Controller
 
     return view('colocations.show', compact('userColocation', 'role', 'total', 'share', 'balances'));
 }
+
+public function viewExpenses($id)
+    {
+
+    $userColocation = Colocation::with(['expenses.user', 'members'])->findOrFail($id);
+    dd($userColocation->members->pluck('id'), auth()->id());     
+
+    if (!$userColocation->members->pluck('id')->contains(auth()->id())) {
+            abort(403, "Vous n'êtes pas membre de cette colocation.");
+        }
+
+        return view('expenses', compact('userColocation'));
+    }
     
 
    public function invite(Request $request, Colocation $colocation)
@@ -134,18 +147,17 @@ class ColocationController extends Controller
 
     public function select($id)
 {
-    $colocation = Colocation::findOrFail($id);
+    $colocation = Colocation::with('members')->findOrFail($id);
     $user = auth()->user();
 
-    if (!$colocation->members->contains($user->id)) {
-        return back()->with('error', 'n aller pas a cette colocation!');
+    
+    if (!$colocation->members->contains('id', $user->id)) {
+        return back()->with('error', 'Accès refusé.');
     }
 
-    $user->update([
-        'active_colocation_id' => $colocation->id
-    ]);
+    $user->update(['active_colocation_id' => $colocation->id]);
 
-    return redirect()->route('colocation.index', ['id' => $colocation->id])
+    return redirect()->route('coloc.expenses', $colocation->id)
                      ->with('success', 'Bienvenue dans ' . $colocation->name);
 }
 }

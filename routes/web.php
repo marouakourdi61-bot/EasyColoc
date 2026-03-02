@@ -36,6 +36,9 @@ Route::get('/colocation/{id?}', [ColocationController::class, 'index'])
 
     Route::get('/colocations/{id}', [ColocationController::class, 'show'])->name('colocations.show');
 
+
+    Route::get('/colocation/{id}/expenses', [ColocationController::class, 'viewExpenses'])->name('coloc.expenses');
+
 Route::post('/colocations/{colocation}/expenses', [ColocationController::class, 'storeExpense'])
     ->name('colocations.expenses.store');
 
