@@ -164,7 +164,8 @@
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined">verified_user</span>
                             <h4 class="text-2xl font-black tracking-tight capitalize">
-                                {{ $hasLeft ? 'Ex-membre' : $role }}</h4>
+                                {{ $hasLeft ? 'Ex-membre' : $role }}
+                            </h4>
                         </div>
                     </div>
                 </div>
@@ -221,46 +222,55 @@
                                 <div
                                     class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center gap-2 bg-slate-50/50 dark:bg-white/5">
                                     <span class="material-symbols-outlined text-accent">payments</span>
-                                    <h3
-                                        class="font-black uppercase tracking-widest text-xs text-slate-900 dark:text-white">
+                                    <h3 class="font-black uppercase tracking-widest text-xs text-slate-900 dark:text-white">
                                         Règlements en attente</h3>
                                 </div>
                                 <div class="p-6 space-y-4">
                                     {{-- Exemple : On vous doit --}}
-                                    <div
-                                        class="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-3xl border border-emerald-500/20 group">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <div class="text-[10px] font-black uppercase tracking-tight">
-                                                <span class="text-emerald-600">Sarah Adams</span>
-                                                <span class="text-slate-400 mx-1">➜</span>
-                                                <span class="text-slate-900 dark:text-white">Moi</span>
+                                    @foreach($toReceive as $settlement)
+                                        <div id="settlement-row-{{ $settlement->id }}"
+                                            class="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-3xl border border-emerald-500/20 group mb-4">
+
+                                            <div class="flex justify-between items-start mb-4">
+                                                <div class="text-[10px] font-black uppercase tracking-tight">
+                                                    <span class="text-emerald-600">{{ $settlement->sender->name }}</span>
+                                                    <span class="text-slate-400 mx-1">➜</span>
+                                                    <span class="text-slate-900 dark:text-white">Moi</span>
+                                                </div>
+                                                <div class="text-xl font-black text-emerald-600 tracking-tighter">
+                                                    {{ number_format($settlement->amount, 2) }} €
+                                                </div>
                                             </div>
-                                            <div class="text-xl font-black text-emerald-600 tracking-tighter">190,12 €
-                                            </div>
+
+                                            <button type="button"
+                                                onclick="confirmPayment(this, {{ $settlement->id }})"
+                                                class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95">
+                                                <span class="material-symbols-outlined text-sm">check_circle</span>
+                                                Confirmer Réception
+                                            </button>
                                         </div>
-                                        <button
-                                            class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95">
-                                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                                            Confirmer Réception
-                                        </button>
-                                    </div>
+                                    @endforeach
 
                                     {{-- Exemple : Vous devez --}}
-                                    <div
-                                        class="p-4 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/5">
-                                        <div class="flex justify-between items-start mb-2">
-                                            <div class="text-[10px] font-black uppercase tracking-tight">
-                                                <span class="text-slate-900 dark:text-white tracking-tighter">Moi</span>
-                                                <span class="text-slate-400 mx-1 font-bold">➜</span>
-                                                <span class="text-accent">John Doe</span>
-                                            </div>
-                                            <div class="text-xl font-black opacity-60 tracking-tighter">45,00 €</div>
-                                        </div>
+                                    @foreach($toPay as $settlement)
                                         <div
-                                            class="text-center py-2 bg-slate-200 dark:bg-white/5 rounded-xl text-[9px] font-black text-slate-500 uppercase tracking-widest italic">
-                                            En attente de John
+                                            class="p-4 bg-slate-500/5 dark:bg-slate-500/10 rounded-3xl border border-slate-500/20 group opacity-70 mb-4">
+                                            <div class="flex justify-between items-start mb-4">
+                                                <div class="text-[10px] font-black uppercase tracking-tight">
+                                                    <span class="text-slate-900 dark:text-white">Moi</span>
+                                                    <span class="text-slate-400 mx-1">➜</span>
+                                                    <span class="text-indigo-400">{{ $settlement->receiver->name }}</span>
+                                                </div>
+                                                <div class="text-xl font-black text-slate-400 tracking-tighter">
+                                                    {{ number_format($settlement->amount, 2) }} €
+                                                </div>
+                                            </div>
+                                            <button disabled
+                                                class="w-full py-3 bg-slate-700/50 text-slate-400 text-[10px] font-black rounded-2xl cursor-not-allowed uppercase tracking-widest flex items-center justify-center gap-2">
+                                                En attente de {{ $settlement->receiver->name }}
+                                            </button>
                                         </div>
-                                    </div>
+                                    @endforeach
                                 </div>
                             </section>
                         </div>
@@ -294,8 +304,7 @@
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                                         @forelse($colocation->expenses->sortByDesc('expense_date') as $expense)
-                                            <tr
-                                                class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+                                            <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                                                 <td class="px-8 py-5">
                                                     <p class="font-black text-sm tracking-tight">{{ $expense->label }}
                                                     </p>
@@ -466,3 +475,40 @@
 </body>
 
 </html>
+
+<script>
+    function confirmPayment(button, settlementId) {
+
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = ' Traitement...';
+
+    fetch(`/settlements/${settlementId}/confirm`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+
+            const row = document.getElementById(`settlement-row-${settlementId}`);
+            row.style.transition = "all 0.5s ease";
+            row.style.opacity = "0";
+            row.style.transform = "scale(0.95)";
+
+            setTimeout(() => {
+                row.remove();
+            }, 500);
+        }
+    })
+    .catch(error => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+        alert('Erreur.');
+    });
+}
+</script>
