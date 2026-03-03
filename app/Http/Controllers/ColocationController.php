@@ -112,6 +112,7 @@ class ColocationController extends Controller
             'balance' => $paid - $share,
         ]);
 
+        
 
 
         

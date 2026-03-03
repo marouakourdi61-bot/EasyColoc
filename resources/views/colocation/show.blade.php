@@ -67,7 +67,7 @@
                         </a>
                         <h2 class="text-5xl font-black tracking-tighter">{{ $colocation->name }}</h2>
                         <p class="opacity-50 flex items-center gap-2 font-bold italic">
-                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            
                             {{ $colocation->description ?? 'Espace partagé' }}
                         </p>
                     </div>
@@ -147,12 +147,16 @@
                         class="bg-white dark:bg-primary/20 border border-slate-200 dark:border-white/5 p-6 rounded-[2rem] shadow-sm">
                         <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3 text-accent">Total
                             Dépensé</p>
-                        <h4 class="text-3xl font-black tracking-tighter">{{ number_format($total, 2) }} €</h4>
+                        <h4 class="text-3xl font-black tracking-tighter">{{ number_format($total, 2) }} dh
+
+                        </h4>
                     </div>
                     <div
                         class="bg-white dark:bg-primary/20 border border-slate-200 dark:border-white/5 p-6 rounded-[2rem] shadow-sm">
                         <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-3">Part / Membre</p>
-                        <h4 class="text-3xl font-black tracking-tighter">{{ number_format($share, 2) }} €</h4>
+                        <h4 class="text-3xl font-black tracking-tighter">{{ number_format($share, 2) }} dh
+
+                        </h4>
                     </div>
                     <div
                         class="bg-white dark:bg-primary/20 border border-slate-200 dark:border-white/5 p-6 rounded-[2rem] shadow-sm">
@@ -179,7 +183,7 @@
                                 class="bg-white dark:bg-primary/10 border border-slate-200 dark:border-primary/20 rounded-[2.5rem] overflow-hidden shadow-sm">
                                 <div
                                     class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center gap-2 bg-slate-50/50 dark:bg-white/5">
-                                    <span class="material-symbols-outlined text-accent">military_tech</span>
+                                    
                                     <h3 class="font-black uppercase tracking-widest text-xs">Membres & Réputation</h3>
                                 </div>
                                 <div class="p-6 space-y-6">
@@ -195,8 +199,7 @@
                                                     <div class="flex items-center gap-0.5">
                                                         @php $stars = $row['balance'] >= 0 ? 5 : ($row['balance'] >= -20 ? 4 : 3); @endphp
                                                         @for ($i = 1; $i <= 5; $i++)
-                                                            <span
-                                                                class="material-symbols-outlined text-[10px] {{ $i <= $stars ? 'text-yellow-500' : 'text-slate-300 dark:text-slate-700' }}">star</span>
+                                                            
                                                         @endfor
                                                     </div>
                                                 </div>
@@ -205,7 +208,8 @@
                                                 <p
                                                     class="font-black text-sm {{ $row['balance'] < 0 ? 'text-rose-500' : 'text-emerald-500' }} tracking-tighter">
                                                     {{ $row['balance'] >= 0 ? '+' : '' }}{{ number_format($row['balance'], 2) }}
-                                                    €
+                                                    dh
+
                                                 </p>
                                                 <p class="text-[9px] font-bold opacity-40 uppercase">Solde act.</p>
                                             </div>
@@ -238,7 +242,8 @@
                                                     <span class="text-slate-900 dark:text-white">Moi</span>
                                                 </div>
                                                 <div class="text-xl font-black text-emerald-600 tracking-tighter">
-                                                    {{ number_format($settlement->amount, 2) }} €
+                                                    {{ number_format($settlement->amount, 2) }} dh
+
                                                 </div>
                                             </div>
 
@@ -262,7 +267,8 @@
                                                     <span class="text-indigo-400">{{ $settlement->receiver->name }}</span>
                                                 </div>
                                                 <div class="text-xl font-black text-slate-400 tracking-tighter">
-                                                    {{ number_format($settlement->amount, 2) }} €
+                                                    {{ number_format($settlement->amount, 2) }} dh
+
                                                 </div>
                                             </div>
                                             <button disabled
@@ -283,7 +289,7 @@
                             <div
                                 class="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
                                 <h3 class="font-black flex items-center gap-2 text-xs uppercase tracking-widest">
-                                    <span class="material-symbols-outlined text-accent">receipt_long</span> Historique
+                                    Historique
                                 </h3>
                                 <span
                                     class="text-[10px] font-black px-3 py-1 bg-accent/10 text-accent rounded-full uppercase tracking-widest">
@@ -327,7 +333,8 @@
                                                 <td class="px-6 py-5 text-right">
                                                     <span
                                                         class="text-sm font-black tracking-tighter text-slate-900 dark:text-white">
-                                                        {{ number_format($expense->amount, 2) }} €
+                                                        {{ number_format($expense->amount, 2) }} dh
+
                                                     </span>
                                                 </td>
                                                 <td class="px-6 py-5">
@@ -419,7 +426,8 @@
                                 placeholder="Ex: Courses Carrefour">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black uppercase opacity-50 mb-2">Montant (€)</label>
+                            <label class="block text-[10px] font-black uppercase opacity-50 mb-2">Montant (dh
+                                )</label>
                             <input type="number" step="0.01" name="amount" required
                                 class="w-full bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 rounded-2xl p-3 focus:ring-accent">
                         </div>
